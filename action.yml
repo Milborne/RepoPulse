@@ -1,0 +1,26 @@
+name: RepoPulse
+description: Audit the open source health of a GitHub repository.
+author: RepoPulse contributors
+
+inputs:
+  min-score:
+    description: Minimum acceptable health score from 0 to 100.
+    required: false
+    default: "70"
+
+outputs:
+  score:
+    description: Calculated repository health score.
+  passed:
+    description: Whether the repository met the minimum score.
+  warnings:
+    description: Warning messages found during the audit.
+
+runs:
+  using: node20
+  main: dist/index.js
+
+branding:
+  icon: activity
+  color: blue
+

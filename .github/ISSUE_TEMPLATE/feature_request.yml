@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an improvement for RepoPulse.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What repository health gap should RepoPulse help detect?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the check, scoring change, or report improvement.
+    validations:
+      required: true
+

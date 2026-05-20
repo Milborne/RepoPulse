@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a reproducible problem in RepoPulse.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest workflow or repository layout that reproduces the issue.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RepoPulse version
+      placeholder: v0.1.0
+

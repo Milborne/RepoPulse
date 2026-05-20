@@ -1,0 +1,31 @@
+{
+  "name": "repopulse",
+  "version": "0.1.0",
+  "description": "GitHub Action that audits the open source health of a repository.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --noEmit && esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/index.js --sourcemap",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "github-action",
+    "open-source",
+    "audit",
+    "repository-health"
+  ],
+  "author": "RepoPulse contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.7"
+  }
+}
