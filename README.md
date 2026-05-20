@@ -33,10 +33,10 @@ For local development, install dependencies with npm:
 npm install
 ```
 
-For GitHub Actions usage, reference the action from a workflow after publishing it to GitHub:
+For GitHub Actions usage, reference the published action from a workflow:
 
 ```yaml
-uses: your-github-user/RepoPulse@v1
+uses: Milborne/RepoPulse@v1
 ```
 
 ## Usage
@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Audit repository health
-        uses: your-github-user/RepoPulse@v1
+        uses: Milborne/RepoPulse@v1
         with:
           min-score: 80
 ```
