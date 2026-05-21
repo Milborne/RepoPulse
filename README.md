@@ -31,7 +31,7 @@ jobs:
           min-score: 80
 ```
 
-Use the moving major tag `Milborne/RepoPulse@v1` for normal workflows. Pin to an immutable tag such as `Milborne/RepoPulse@v1.0.1` when you need fully reproducible behavior.
+Use the moving major tag `Milborne/RepoPulse@v1` for normal workflows. Pin to an immutable tag such as `Milborne/RepoPulse@v1.1.0` when you need fully reproducible behavior.
 
 ## Checks
 

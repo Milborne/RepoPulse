@@ -22,4 +22,4 @@ body:
     id: version
     attributes:
       label: RepoPulse version
-      placeholder: v1.0.1
+      placeholder: v1.1.0

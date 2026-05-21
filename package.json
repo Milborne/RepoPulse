@@ -1,6 +1,6 @@
 {
   "name": "repopulse",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "GitHub Action that audits the open source health of a repository.",
   "main": "dist/index.js",
   "scripts": {

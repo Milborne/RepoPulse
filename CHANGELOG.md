@@ -4,6 +4,10 @@ All notable changes to RepoPulse are documented in this file.
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v1.1.0 - 2026-05-21
+
 - Add robust content validation for community files and README sections.
 - Add configurable strict mode, exclusions, custom weights, output formats, JSON output, and job summary support.
 - Add CI, Dependabot, linting, formatting checks, and expanded tests.
