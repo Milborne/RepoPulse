@@ -18636,7 +18636,8 @@ var require_undici = __commonJS({
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
-  run: () => run
+  run: () => run,
+  shouldFailWorkflow: () => shouldFailWorkflow
 });
 module.exports = __toCommonJS(index_exports);
 
@@ -19143,207 +19144,743 @@ var import_node_path = __toESM(require("node:path"));
 var FILE_CHECKS = [
   {
     id: "readme",
+    category: "file",
     label: "README.md",
     path: "README.md",
+    expectedType: "file",
     points: 12,
-    recommendation: "Add a README.md that explains the project, setup, usage, contribution flow, license, and funding options."
+    recommendation: "Add a non-empty README.md that explains setup, usage, contribution flow, license, and funding or sponsorship options."
   },
   {
     id: "license",
+    category: "file",
     label: "LICENSE",
     path: "LICENSE",
+    expectedType: "file",
     points: 10,
-    recommendation: "Add a LICENSE file so users know how they can use and distribute the project."
+    recommendation: "Add a non-empty LICENSE file with a recognizable open source license such as MIT, Apache-2.0, GPL, BSD, ISC, or MPL."
   },
   {
     id: "contributing",
+    category: "file",
     label: "CONTRIBUTING.md",
     path: "CONTRIBUTING.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add CONTRIBUTING.md with local setup, test commands, and pull request expectations."
+    recommendation: "Add CONTRIBUTING.md with setup, test/build commands, development flow, and pull request expectations."
   },
   {
     id: "code-of-conduct",
+    category: "file",
     label: "CODE_OF_CONDUCT.md",
     path: "CODE_OF_CONDUCT.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add CODE_OF_CONDUCT.md to set clear community behavior expectations."
+    recommendation: "Add CODE_OF_CONDUCT.md with expected behavior, unacceptable behavior, and enforcement guidance."
   },
   {
     id: "security",
+    category: "file",
     label: "SECURITY.md",
     path: "SECURITY.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add SECURITY.md with supported versions and vulnerability reporting instructions."
+    recommendation: "Add SECURITY.md with private vulnerability reporting instructions, such as an email address or GitHub Private Vulnerability Reporting."
   },
   {
     id: "funding",
+    category: "file",
     label: ".github/FUNDING.yml",
     path: ".github/FUNDING.yml",
+    expectedType: "file",
     points: 5,
-    recommendation: "Add .github/FUNDING.yml so contributors can find sponsorship options."
+    recommendation: "Add .github/FUNDING.yml with real sponsorship handles, or exclude the funding check when sponsorship does not apply."
   },
   {
     id: "issue-template",
+    category: "file",
     label: ".github/ISSUE_TEMPLATE",
     path: ".github/ISSUE_TEMPLATE",
+    expectedType: "directory",
     points: 6,
-    recommendation: "Add issue templates to collect consistent bug reports and feature requests."
+    recommendation: "Add at least one useful issue template in .github/ISSUE_TEMPLATE using .yml, .yaml, or .md."
   },
   {
     id: "pull-request-template",
+    category: "file",
     label: ".github/PULL_REQUEST_TEMPLATE.md",
     path: ".github/PULL_REQUEST_TEMPLATE.md",
+    expectedType: "file",
     points: 6,
-    recommendation: "Add a pull request template with checklist items for tests, docs, and risk."
+    recommendation: "Add a pull request template with summary, tests, documentation, checklist, or risk sections."
   }
 ];
 var README_SECTION_CHECKS = [
   {
     id: "readme-installation",
+    category: "readme-section",
     label: "Installation",
     points: 8,
-    patterns: [
-      headingPattern(["installation", "install", "setup", "getting started"]),
-      /(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i
-    ],
-    recommendation: "Add an Installation section that shows how to install or prepare the project."
+    headings: {
+      en: ["installation", "install", "setup", "getting started"],
+      es: ["instalacion", "guia de instalacion", "configuracion", "primeros pasos"]
+    },
+    loosePatterns: [/\b(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i],
+    recommendation: "Add an Installation section with setup or install commands."
   },
   {
     id: "readme-usage",
+    category: "readme-section",
     label: "Usage",
     points: 8,
-    patterns: [
-      headingPattern(["usage", "use", "quickstart", "examples?", "how to use"])
-    ],
-    recommendation: "Add a Usage section with a realistic example."
+    headings: {
+      en: ["usage", "quickstart", "quick start", "examples", "how to use"],
+      es: ["uso", "uso rapido", "inicio rapido", "ejemplos", "como usar", "guia de uso"]
+    },
+    recommendation: "Add a Usage section with a realistic workflow or command example."
   },
   {
     id: "readme-contributing",
+    category: "readme-section",
     label: "Contributing",
     points: 8,
-    patterns: [
-      headingPattern(["contributing", "contribute", "development", "contributors?"])
-    ],
+    headings: {
+      en: ["contributing", "contribute", "development", "contributor", "contributors"],
+      es: ["contribuir", "contribucion", "desarrollo", "colaborador", "colaboradores"]
+    },
     recommendation: "Add a Contributing section that links to CONTRIBUTING.md or explains the process."
   },
   {
     id: "readme-license",
+    category: "readme-section",
     label: "License",
     points: 8,
-    patterns: [
-      headingPattern(["license", "licensing"])
-    ],
+    headings: {
+      en: ["license", "licensing"],
+      es: ["licencia", "licenciamiento"]
+    },
     recommendation: "Add a License section that names the project license."
   },
   {
     id: "readme-funding",
+    category: "readme-section",
     label: "Sponsors or Funding",
     points: 8,
-    patterns: [
-      headingPattern(["sponsors?", "funding", "support", "donate", "sponsoring"])
-    ],
-    recommendation: "Add a Sponsors or Funding section that explains how users can support the project."
+    headings: {
+      en: [
+        "sponsor",
+        "sponsors",
+        "funding",
+        "sponsors or funding",
+        "sponsorship",
+        "support",
+        "support the project",
+        "donate",
+        "sponsoring"
+      ],
+      es: [
+        "patrocinador",
+        "patrocinadores",
+        "financiacion",
+        "apoyo",
+        "apoyar el proyecto",
+        "donar",
+        "patrocinar"
+      ]
+    },
+    recommendation: "Add a Sponsors or Funding section, or exclude this check when sponsorship does not apply."
   }
 ];
-function headingPattern(names) {
-  return new RegExp(String.raw`(^|\n)\s{0,3}#{1,6}\s*(?:${names.join("|")})(?:\s|$|[#:` + "`" + String.raw`])`, "i");
+var ALL_CHECKS = [...FILE_CHECKS, ...README_SECTION_CHECKS];
+var ALL_CHECK_IDS = ALL_CHECKS.map((check) => check.id);
+
+// src/config.ts
+var DEFAULT_MIN_SCORE = 70;
+var DECIMAL_PATTERN = /^(?:\d+(?:\.\d+)?|\.\d+)$/;
+var VALID_FORMATS = ["text", "markdown", "json"];
+var VALID_README_LANGUAGES = ["auto", "en", "es"];
+function parseActionConfig(inputs) {
+  const parsedExcludeChecks = parseCsvList(inputs.excludeChecks);
+  const unknownExcludedChecks = parsedExcludeChecks.filter((id) => !ALL_CHECK_IDS.includes(id));
+  const knownExcludedChecks = parsedExcludeChecks.filter((id) => ALL_CHECK_IDS.includes(id));
+  const parsedCustomWeights = parseCustomWeights(inputs.customWeights);
+  return {
+    minScore: parseMinScore(inputs.minScore),
+    strictMode: parseBoolean(inputs.strictMode, false, "strict-mode"),
+    failOnMissing: parseBoolean(inputs.failOnMissing, true, "fail-on-missing"),
+    format: parseEnum(inputs.format, VALID_FORMATS, "text", "format"),
+    excludeChecks: unique(knownExcludedChecks),
+    readmeLanguage: parseEnum(inputs.readmeLanguage, VALID_README_LANGUAGES, "auto", "readme-language"),
+    customWeights: parsedCustomWeights.weights,
+    jobSummary: parseBoolean(inputs.jobSummary, true, "job-summary"),
+    unknownExcludedChecks: unique(unknownExcludedChecks),
+    unknownCustomWeights: parsedCustomWeights.unknownIds
+  };
+}
+function parseMinScore(value) {
+  const normalizedValue = value?.trim() || String(DEFAULT_MIN_SCORE);
+  if (!DECIMAL_PATTERN.test(normalizedValue)) {
+    throw new Error(`min-score must be a decimal number from 0 to 100. Received: ${normalizedValue}`);
+  }
+  const score = Number(normalizedValue);
+  if (!Number.isFinite(score) || score < 0 || score > 100) {
+    throw new Error(`min-score must be between 0 and 100. Received: ${normalizedValue}`);
+  }
+  return score;
+}
+function parseBoolean(value, defaultValue, inputName) {
+  const normalizedValue = value?.trim().toLowerCase();
+  if (!normalizedValue) {
+    return defaultValue;
+  }
+  if (["true", "1", "yes", "y", "on"].includes(normalizedValue)) {
+    return true;
+  }
+  if (["false", "0", "no", "n", "off"].includes(normalizedValue)) {
+    return false;
+  }
+  throw new Error(`${inputName} must be true or false. Received: ${value}`);
+}
+function parseEnum(value, allowedValues, defaultValue, inputName) {
+  const normalizedValue = value?.trim().toLowerCase();
+  if (!normalizedValue) {
+    return defaultValue;
+  }
+  if (allowedValues.includes(normalizedValue)) {
+    return normalizedValue;
+  }
+  throw new Error(`${inputName} must be one of: ${allowedValues.join(", ")}. Received: ${value}`);
+}
+function parseCsvList(value) {
+  return unique(
+    (value ?? "").split(",").map((item) => item.trim()).filter(Boolean)
+  );
+}
+function parseCustomWeights(value) {
+  const normalizedValue = value?.trim();
+  if (!normalizedValue) {
+    return { weights: {}, unknownIds: [] };
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(normalizedValue);
+  } catch {
+    throw new Error('custom-weights must be valid JSON, for example: {"funding": 0}');
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("custom-weights must be a JSON object keyed by check id.");
+  }
+  const weights = {};
+  const unknownIds = [];
+  for (const [id, rawWeight] of Object.entries(parsed)) {
+    if (!ALL_CHECK_IDS.includes(id)) {
+      unknownIds.push(id);
+      continue;
+    }
+    if (typeof rawWeight !== "number" || !Number.isFinite(rawWeight) || rawWeight < 0) {
+      throw new Error(`custom-weights.${id} must be a non-negative finite number.`);
+    }
+    weights[id] = rawWeight;
+  }
+  return { weights, unknownIds: unique(unknownIds) };
+}
+function unique(values) {
+  return [...new Set(values)];
 }
 
 // src/audit.ts
-async function auditRepository(repositoryPath) {
+var PLACEHOLDER_PATTERN = /\b(?:tu_usuario_github|your[-_\s]?username|username|example|todo|tbd|changeme|replace[-_\s]?me)\b/i;
+var EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
+var PRIVATE_REPORTING_PATTERN = /\b(?:private vulnerability reporting|privately|security advisory|github security advisories|report privately)\b/i;
+var MIN_LICENSE_LENGTH = 20;
+var FUNDING_ALLOWED_KEYS = /* @__PURE__ */ new Set([
+  "github",
+  "patreon",
+  "open_collective",
+  "ko_fi",
+  "tidelift",
+  "community_bridge",
+  "liberapay",
+  "issuehunt",
+  "otechie",
+  "lfx_crowdfunding",
+  "custom"
+]);
+async function auditRepository(repositoryPath, config = parseActionConfig({})) {
   const fileResults = await Promise.all(
-    FILE_CHECKS.map(async (check) => {
-      const exists2 = await pathExists(import_node_path.default.join(repositoryPath, check.path));
-      return toCheckResult({
-        check,
-        category: "file",
-        passed: exists2,
-        detail: exists2 ? "Found" : "Missing"
-      });
-    })
+    FILE_CHECKS.map((check) => evaluateFileCheck(repositoryPath, applyWeight(check, config), config))
   );
-  const readmePath = import_node_path.default.join(repositoryPath, "README.md");
-  const readmeExists = fileResults.find((result) => result.id === "readme")?.passed ?? false;
-  const readmeContent = readmeExists ? await import_node_fs.promises.readFile(readmePath, "utf8") : "";
-  const readmeResults = README_SECTION_CHECKS.map((check) => {
-    const passed = readmeExists && check.patterns.some((pattern) => pattern.test(readmeContent));
-    return toCheckResult({
-      check,
-      category: "readme-section",
-      passed,
-      detail: getReadmeSectionDetail(readmeExists, passed)
-    });
-  });
-  const allResults = [...fileResults, ...readmeResults];
-  const earnedPoints = allResults.reduce((sum, result) => sum + result.earned, 0);
-  const maxPoints = allResults.reduce((sum, result) => sum + result.points, 0);
-  const score = maxPoints === 0 ? 0 : Math.round(earnedPoints / maxPoints * 100);
-  const failedResults = allResults.filter((result) => !result.passed);
+  const readmeContext = await loadReadmeContext(repositoryPath, fileResults);
+  const readmeResults = README_SECTION_CHECKS.map(
+    (check) => evaluateReadmeSection(applyWeight(check, config), readmeContext, config)
+  );
+  const checks = [...fileResults, ...readmeResults];
+  const activeChecks = checks.filter((result) => !result.excluded);
+  const earnedPoints = activeChecks.reduce((sum, result) => sum + result.earned, 0);
+  const maxPoints = activeChecks.reduce((sum, result) => sum + result.points, 0);
+  const score = maxPoints === 0 ? 100 : Math.round(earnedPoints / maxPoints * 100);
+  const passed = score >= config.minScore;
+  const resultWarnings = buildWarnings(checks, config);
+  const resultRecommendations = unique2(
+    activeChecks.filter((result) => result.status === "fail").map((result) => result.recommendation)
+  );
+  if (maxPoints === 0) {
+    resultWarnings.push("[config] All checks were excluded; score defaults to 100.");
+  }
   return {
     score,
+    passed,
     earnedPoints,
     maxPoints,
     files: fileResults,
     readmeSections: readmeResults,
-    warnings: failedResults.map(formatWarning),
-    recommendations: failedResults.map((result) => result.recommendation)
+    checks,
+    warnings: unique2(resultWarnings),
+    recommendations: resultRecommendations,
+    config
   };
 }
-async function pathExists(targetPath) {
+async function evaluateFileCheck(repositoryPath, check, config) {
+  if (config.excludeChecks.includes(check.id)) {
+    return toCheckResult(check, {
+      status: "excluded",
+      detail: "Excluded by configuration"
+    });
+  }
+  const targetPath = import_node_path.default.join(repositoryPath, check.path ?? "");
+  const inspection = await inspectPath(targetPath, check.expectedType ?? "file");
+  if (!inspection.exists || !inspection.validType) {
+    return toCheckResult(check, {
+      status: "fail",
+      detail: inspection.detail
+    });
+  }
+  const validation = await validateFileContent(repositoryPath, targetPath, check, config);
+  return toCheckResult(check, validation);
+}
+async function validateFileContent(repositoryPath, targetPath, check, config) {
+  switch (check.id) {
+    case "readme":
+      return validateNonEmptyFile(targetPath, "Found non-empty README.md");
+    case "license":
+      return validateLicense(targetPath);
+    case "contributing":
+      return validateContributing(targetPath);
+    case "code-of-conduct":
+      return validateCodeOfConduct(targetPath);
+    case "security":
+      return validateSecurity(targetPath);
+    case "funding":
+      return validateFunding(targetPath);
+    case "issue-template":
+      return validateIssueTemplates(targetPath);
+    case "pull-request-template":
+      return validatePullRequestTemplate(targetPath);
+    default:
+      void repositoryPath;
+      void config;
+      return { status: "pass", detail: "Found" };
+  }
+}
+async function inspectPath(targetPath, expectedType) {
   try {
-    await import_node_fs.promises.stat(targetPath);
-    return true;
+    const stat2 = await import_node_fs.promises.stat(targetPath);
+    const actualType = stat2.isFile() ? "file" : stat2.isDirectory() ? "directory" : "file-or-directory";
+    const validType = expectedType === "file-or-directory" || actualType === expectedType;
+    return {
+      exists: true,
+      validType,
+      actualType,
+      detail: validType ? `Found ${actualType}` : `Invalid type: expected ${expectedType}, found ${actualType}`
+    };
   } catch (error2) {
     if (isNodeError(error2) && error2.code === "ENOENT") {
-      return false;
+      return {
+        exists: false,
+        validType: false,
+        detail: "Missing"
+      };
     }
     throw error2;
   }
 }
-function toCheckResult(options) {
+async function validateNonEmptyFile(targetPath, successDetail) {
+  const content = await import_node_fs.promises.readFile(targetPath, "utf8");
+  if (content.trim().length === 0) {
+    return { status: "fail", detail: "Empty file" };
+  }
+  return { status: "pass", detail: successDetail };
+}
+async function validateLicense(targetPath) {
+  const content = await import_node_fs.promises.readFile(targetPath, "utf8");
+  const normalizedContent = normalize(content);
+  if (content.trim().length === 0) {
+    return { status: "fail", detail: "Empty LICENSE file" };
+  }
+  if (content.trim().length < MIN_LICENSE_LENGTH) {
+    return {
+      status: "warning",
+      detail: "LICENSE is present but very short; license type could not be confidently recognized"
+    };
+  }
+  const license = detectLicense(normalizedContent);
+  if (!license) {
+    return {
+      status: "warning",
+      detail: "LICENSE is present but no common license was recognized"
+    };
+  }
+  return { status: "pass", detail: `Recognized ${license} license` };
+}
+function detectLicense(normalizedContent) {
+  if (/\bmit license\b/.test(normalizedContent) || /\bpermission is hereby granted\b/.test(normalizedContent)) {
+    return "MIT";
+  }
+  if (/\bapache license\b/.test(normalizedContent) || /\bapache-?2\.0\b/.test(normalizedContent)) {
+    return "Apache-2.0";
+  }
+  if (/\bgnu general public license\b/.test(normalizedContent) || /\bgpl\b/.test(normalizedContent)) {
+    return "GPL";
+  }
+  if (/\bbsd\b/.test(normalizedContent) || /\bredistribution and use in source and binary forms\b/.test(normalizedContent)) {
+    return "BSD";
+  }
+  if (/\bisc license\b/.test(normalizedContent)) {
+    return "ISC";
+  }
+  if (/\bmozilla public license\b/.test(normalizedContent) || /\bmpl-?2\.0\b/.test(normalizedContent)) {
+    return "MPL";
+  }
+  return void 0;
+}
+async function validateContributing(targetPath) {
+  const content = await readRequiredContent(targetPath, "CONTRIBUTING.md");
+  if (content.status === "fail") {
+    return content;
+  }
+  const normalizedContent = normalize(content.detail);
+  const usefulSignals = countMatches(normalizedContent, [
+    /\b(setup|install|local setup|development|desarrollo)\b/,
+    /\b(test|tests|testing|prueba|pruebas)\b/,
+    /\b(build|compile|bundle|compilar)\b/,
+    /\b(pull request|pr|merge request)\b/,
+    /\b(development flow|workflow|flujo)\b/
+  ]);
+  if (usefulSignals < 2) {
+    return {
+      status: "fail",
+      detail: "CONTRIBUTING.md lacks setup, test/build, PR, or development flow guidance"
+    };
+  }
+  return { status: "pass", detail: "Found useful contributing guidance" };
+}
+async function validateCodeOfConduct(targetPath) {
+  const content = await readRequiredContent(targetPath, "CODE_OF_CONDUCT.md");
+  if (content.status === "fail") {
+    return content;
+  }
+  const normalizedContent = normalize(content.detail);
+  const hasExpected = /\b(expected behavior|expected behaviour|comportamiento esperado)\b/.test(
+    normalizedContent
+  );
+  const hasUnacceptable = /\b(unacceptable behavior|unacceptable behaviour|comportamiento inaceptable)\b/.test(normalizedContent);
+  const hasEnforcement = /\b(enforcement|aplicacion|aplicación|cumplimiento)\b/.test(normalizedContent);
+  if (!(hasEnforcement && (hasExpected || hasUnacceptable))) {
+    return {
+      status: "fail",
+      detail: "CODE_OF_CONDUCT.md needs expected/unacceptable behavior and enforcement guidance"
+    };
+  }
+  return { status: "pass", detail: "Found behavior and enforcement guidance" };
+}
+async function validateSecurity(targetPath) {
+  const content = await readRequiredContent(targetPath, "SECURITY.md");
+  if (content.status === "fail") {
+    return content;
+  }
+  const rawContent = content.detail;
+  const normalizedContent = normalize(rawContent);
+  const hasPlaceholder = PLACEHOLDER_PATTERN.test(rawContent);
+  const hasPrivateChannel = EMAIL_PATTERN.test(rawContent) || PRIVATE_REPORTING_PATTERN.test(normalizedContent);
+  if (hasPlaceholder) {
+    return {
+      status: "fail",
+      detail: "Placeholder detected in SECURITY.md reporting instructions"
+    };
+  }
+  if (!hasPrivateChannel) {
+    return {
+      status: "fail",
+      detail: "SECURITY.md lacks a private reporting channel"
+    };
+  }
+  return { status: "pass", detail: "Found private vulnerability reporting instructions" };
+}
+async function validateFunding(targetPath) {
+  const content = await readRequiredContent(targetPath, ".github/FUNDING.yml");
+  if (content.status === "fail") {
+    return content;
+  }
+  const rawContent = content.detail;
+  const entries = parseFundingEntries(rawContent);
+  const meaningfulEntries = entries.filter((entry) => entry.key || entry.value);
+  if (meaningfulEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml has no sponsorship entries"
+    };
+  }
+  if (hasFundingPlaceholder(rawContent)) {
+    return {
+      status: "fail",
+      detail: "Placeholder detected in FUNDING.yml"
+    };
+  }
+  const supportedEntries = entries.filter((entry) => FUNDING_ALLOWED_KEYS.has(entry.key));
+  if (supportedEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml does not use a supported funding key"
+    };
+  }
+  if (!supportedEntries.some((entry) => entry.hasValue)) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml supported keys have empty values"
+    };
+  }
+  return { status: "pass", detail: "Found funding configuration with supported keys" };
+}
+function parseFundingEntries(content) {
+  const lines = content.split(/\r?\n/).map((line) => line.replace(/\s+#.*$/, "")).map((line) => line.trim());
+  const entries = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+    const match = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+    if (!match) {
+      entries.push({ key: "", value: line, hasValue: Boolean(line) });
+      continue;
+    }
+    const key = match[1];
+    const value = match[2].trim();
+    const nextLine = lines[index + 1] ?? "";
+    const hasListValue = !value && nextLine.startsWith("- ") && nextLine.slice(2).trim().length > 0;
+    entries.push({
+      key,
+      value,
+      hasValue: hasFundingValue(value) || hasListValue
+    });
+  }
+  return entries;
+}
+function hasFundingValue(value) {
+  const normalizedValue = value.replace(/[[\]",']/g, "").trim();
+  return normalizedValue.length > 0;
+}
+function hasFundingPlaceholder(content) {
+  const contentWithoutUrls = content.replace(/https?:\/\/\S+/gi, "");
+  return PLACEHOLDER_PATTERN.test(contentWithoutUrls);
+}
+async function validateIssueTemplates(directoryPath) {
+  const entries = await import_node_fs.promises.readdir(directoryPath, { withFileTypes: true });
+  const templateFiles = entries.filter((entry) => entry.isFile() && /\.(?:ya?ml|md)$/i.test(entry.name)).map((entry) => import_node_path.default.join(directoryPath, entry.name));
+  if (templateFiles.length === 0) {
+    return {
+      status: "fail",
+      detail: "ISSUE_TEMPLATE directory has no .yml, .yaml, or .md templates"
+    };
+  }
+  const templates = await Promise.all(
+    templateFiles.map(async (filePath) => ({
+      filePath,
+      content: await import_node_fs.promises.readFile(filePath, "utf8")
+    }))
+  );
+  const usefulTemplates = templates.filter(isUsefulIssueTemplate);
+  if (usefulTemplates.length === 0) {
+    return {
+      status: "fail",
+      detail: "Issue templates exist but lack required name, description, body, or non-empty Markdown content"
+    };
+  }
+  return { status: "pass", detail: `Found ${usefulTemplates.length} useful issue template(s)` };
+}
+function isUsefulIssueTemplate(template) {
+  if (template.content.trim().length === 0) {
+    return false;
+  }
+  if (/\.md$/i.test(template.filePath)) {
+    return template.content.trim().length >= 20;
+  }
+  return /^name:\s*\S/im.test(template.content) && /^description:\s*\S/im.test(template.content) && /^body:\s*$/im.test(template.content);
+}
+async function validatePullRequestTemplate(targetPath) {
+  const content = await readRequiredContent(targetPath, ".github/PULL_REQUEST_TEMPLATE.md");
+  if (content.status === "fail") {
+    return content;
+  }
+  const normalizedContent = normalize(content.detail);
+  const hasChecklist = /-\s*\[[ x]\]/i.test(content.detail);
+  const sectionSignals = countMatches(normalizedContent, [
+    /\bsummary\b/,
+    /\btests?\b/,
+    /\bdocs?|documentation\b/,
+    /\brisk\b/,
+    /\bchecklist\b/
+  ]);
+  if (!hasChecklist && sectionSignals < 2) {
+    return {
+      status: "fail",
+      detail: "Pull request template needs a checklist or sections for summary, tests, docs, or risk"
+    };
+  }
+  return { status: "pass", detail: "Found useful pull request template" };
+}
+async function readRequiredContent(targetPath, label) {
+  const content = await import_node_fs.promises.readFile(targetPath, "utf8");
+  if (content.trim().length === 0) {
+    return { status: "fail", detail: `Empty ${label}` };
+  }
+  return { status: "pass", detail: content };
+}
+async function loadReadmeContext(repositoryPath, fileResults) {
+  const readmeResult = fileResults.find((result) => result.id === "readme");
+  const exists2 = readmeResult?.status !== "fail" && readmeResult?.status !== "excluded";
+  if (!exists2) {
+    return {
+      exists: false,
+      valid: false,
+      content: "",
+      strippedContent: "",
+      headings: []
+    };
+  }
+  const content = await import_node_fs.promises.readFile(import_node_path.default.join(repositoryPath, "README.md"), "utf8");
+  const strippedContent = stripFencedCodeBlocks(content);
   return {
-    id: options.check.id,
-    category: options.category,
-    label: options.check.label,
-    points: options.check.points,
-    earned: options.passed ? options.check.points : 0,
-    passed: options.passed,
-    recommendation: options.check.recommendation,
-    detail: options.detail
+    exists: true,
+    valid: content.trim().length > 0,
+    content,
+    strippedContent,
+    headings: extractMarkdownHeadings(strippedContent)
   };
 }
-function formatWarning(result) {
-  if (result.category === "file") {
-    return `Missing file: ${result.label}`;
+function evaluateReadmeSection(check, readmeContext, config) {
+  if (config.excludeChecks.includes(check.id)) {
+    return toCheckResult(check, {
+      status: "excluded",
+      detail: "Excluded by configuration"
+    });
   }
-  return `README.md missing section: ${result.label}`;
+  if (!readmeContext.exists) {
+    return toCheckResult(check, {
+      status: "fail",
+      detail: "README.md missing"
+    });
+  }
+  if (!readmeContext.valid) {
+    return toCheckResult(check, {
+      status: "fail",
+      detail: "README.md empty"
+    });
+  }
+  const headingMatched = hasReadmeHeading(check, readmeContext.headings, config.readmeLanguage);
+  const looseMatched = !config.strictMode && (check.loosePatterns ?? []).some((pattern) => pattern.test(readmeContext.strippedContent));
+  const passed = headingMatched || looseMatched;
+  return toCheckResult(check, {
+    status: passed ? "pass" : "fail",
+    detail: passed ? headingMatched ? "Section heading detected" : "Section signal detected" : "Section missing"
+  });
 }
-function getReadmeSectionDetail(readmeExists, sectionPassed) {
-  if (!readmeExists) {
-    return "README.md missing";
+function hasReadmeHeading(check, headings, readmeLanguage) {
+  const languages = readmeLanguage === "auto" ? ["en", "es"] : [readmeLanguage];
+  const expectedHeadings = languages.flatMap((language) => check.headings[language]).map(normalizeHeading);
+  return headings.some(
+    (heading) => expectedHeadings.some((expectedHeading) => isHeadingMatch(heading, expectedHeading))
+  );
+}
+function isHeadingMatch(heading, expectedHeading) {
+  return heading === expectedHeading || heading.startsWith(`${expectedHeading} `);
+}
+function stripFencedCodeBlocks(content) {
+  const lines = content.split(/\r?\n/);
+  const strippedLines = [];
+  let inFence = false;
+  let fenceMarker = "";
+  for (const line of lines) {
+    const fenceMatch = line.match(/^\s{0,3}(```+|~~~+)/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1][0];
+      if (!inFence) {
+        inFence = true;
+        fenceMarker = marker;
+      } else if (marker === fenceMarker) {
+        inFence = false;
+        fenceMarker = "";
+      }
+      continue;
+    }
+    if (!inFence) {
+      strippedLines.push(line);
+    }
   }
-  return sectionPassed ? "Section detected" : "Section missing";
+  return strippedLines.join("\n");
+}
+function extractMarkdownHeadings(content) {
+  return content.split(/\r?\n/).map((line) => line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/)?.[1]).filter((heading) => Boolean(heading)).map(normalizeHeading);
+}
+function normalizeHeading(value) {
+  return normalize(value).replace(/[`*_~[\]()]/g, "").replace(/[^\p{Letter}\p{Number}\s?]/gu, "").replace(/\s+/g, " ").trim();
+}
+function toCheckResult(check, validation) {
+  const excluded = validation.status === "excluded";
+  const passed = validation.status === "pass" || validation.status === "warning";
+  return {
+    id: check.id,
+    category: check.category,
+    label: check.label,
+    points: excluded ? 0 : check.points,
+    earned: passed ? check.points : 0,
+    passed,
+    status: validation.status,
+    excluded,
+    recommendation: "recommendation" in validation && validation.recommendation ? validation.recommendation : check.recommendation,
+    detail: validation.detail
+  };
+}
+function applyWeight(check, config) {
+  const customWeight = config.customWeights[check.id];
+  if (customWeight === void 0) {
+    return check;
+  }
+  return { ...check, points: customWeight };
+}
+function buildWarnings(checks, config) {
+  const checkWarnings = checks.filter((result) => result.status === "fail" || result.status === "warning").map((result) => `[${result.id}] ${result.detail}`);
+  const configWarnings = [
+    ...config.unknownExcludedChecks.map((id) => `[config] Unknown exclude-checks id ignored: ${id}`),
+    ...config.unknownCustomWeights.map((id) => `[config] Unknown custom-weights id ignored: ${id}`)
+  ];
+  return [...checkWarnings, ...configWarnings];
+}
+function countMatches(content, patterns) {
+  return patterns.filter((pattern) => pattern.test(content)).length;
+}
+function normalize(value) {
+  return value.normalize("NFD").replace(new RegExp("\\p{Diacritic}", "gu"), "").toLowerCase();
+}
+function unique2(values) {
+  return [...new Set(values)];
 }
 function isNodeError(error2) {
   return error2 instanceof Error && "code" in error2;
 }
 
-// src/config.ts
-var DEFAULT_MIN_SCORE = 70;
-function parseMinScore(value) {
-  const normalizedValue = value?.trim() || String(DEFAULT_MIN_SCORE);
-  const score = Number(normalizedValue);
-  if (!Number.isFinite(score)) {
-    throw new Error(`min-score must be a number from 0 to 100. Received: ${normalizedValue}`);
-  }
-  if (score < 0 || score > 100) {
-    throw new Error(`min-score must be between 0 and 100. Received: ${normalizedValue}`);
-  }
-  return score;
-}
-
 // src/report.ts
+var import_node_fs2 = require("node:fs");
 var colorCodes = {
   green: "\x1B[32m",
   red: "\x1B[31m",
@@ -19352,30 +19889,146 @@ var colorCodes = {
   bold: "\x1B[1m",
   reset: "\x1B[0m"
 };
-function formatReport(result, minScore, options = {}) {
-  const passed = result.score >= minScore;
+function formatTextReport(result, options = {}) {
   const colors = options.colors ?? true;
   const lines = [
     "",
     color("bold", "RepoPulse Open Source Health Audit", colors),
-    color(passed ? "green" : "red", `Score: ${result.score}/100 (minimum: ${minScore}) ${passed ? "PASS" : "FAIL"}`, colors),
+    color(
+      result.passed ? "green" : "red",
+      `Score: ${result.score}/100 (minimum: ${result.config.minScore}) ${result.passed ? "PASS" : "FAIL"}`,
+      colors
+    ),
+    `Mode: ${result.config.strictMode ? "strict" : "standard"} | Format: ${result.config.format} | Fail on missing: ${result.config.failOnMissing}`,
     "",
     color("cyan", "Repository files", colors),
-    ...result.files.map((check) => formatCheck(check, colors)),
+    ...result.files.map((check) => formatTextCheck(check, colors)),
     "",
     color("cyan", "README sections", colors),
-    ...result.readmeSections.map((check) => formatCheck(check, colors))
+    ...result.readmeSections.map((check) => formatTextCheck(check, colors))
   ];
+  if (result.warnings.length > 0) {
+    lines.push("", color("yellow", "Warnings", colors));
+    lines.push(...result.warnings.map((warning2) => `  - ${warning2}`));
+  }
   if (result.recommendations.length > 0) {
     lines.push("", color("yellow", "Recommendations", colors));
     lines.push(...result.recommendations.map((recommendation) => `  - ${recommendation}`));
   }
   return lines.join("\n");
 }
-function formatCheck(check, colors) {
-  const status = check.passed ? color("green", "PASS", colors) : color("red", "MISS", colors);
-  const points = `${check.earned}/${check.points}`;
-  return `  [${status}] ${check.label} (${points}) - ${check.detail}`;
+function formatMarkdownReport(result) {
+  const status = result.passed ? "PASS" : "FAIL";
+  const lines = [
+    "## RepoPulse Open Source Health Audit",
+    "",
+    `**Score:** ${result.score}/100`,
+    `**Status:** ${status}`,
+    `**Minimum score:** ${result.config.minScore}`,
+    "",
+    "### Configuration",
+    "",
+    "| Setting | Value |",
+    "| --- | --- |",
+    `| strict-mode | \`${result.config.strictMode}\` |`,
+    `| fail-on-missing | \`${result.config.failOnMissing}\` |`,
+    `| format | \`${result.config.format}\` |`,
+    `| readme-language | \`${result.config.readmeLanguage}\` |`,
+    `| job-summary | \`${result.config.jobSummary}\` |`,
+    `| exclude-checks | ${formatInlineList(result.config.excludeChecks)} |`,
+    `| custom-weights | ${formatCustomWeights(result.config.customWeights)} |`,
+    "",
+    "### Checks",
+    "",
+    "| Status | ID | Category | Check | Points | Detail |",
+    "| --- | --- | --- | --- | ---: | --- |",
+    ...result.checks.map(formatMarkdownCheck)
+  ];
+  if (result.warnings.length > 0) {
+    lines.push("", "### Warnings", "", ...result.warnings.map((warning2) => `- ${escapeMarkdown(warning2)}`));
+  }
+  if (result.recommendations.length > 0) {
+    lines.push(
+      "",
+      "### Recommendations",
+      "",
+      ...result.recommendations.map((recommendation) => `- ${escapeMarkdown(recommendation)}`)
+    );
+  }
+  return lines.join("\n");
+}
+function toJsonReport(result) {
+  return {
+    score: result.score,
+    passed: result.passed,
+    earnedPoints: result.earnedPoints,
+    maxPoints: result.maxPoints,
+    checks: result.checks,
+    warnings: result.warnings,
+    recommendations: result.recommendations,
+    config: result.config
+  };
+}
+function formatJsonReport(result, pretty = true) {
+  return JSON.stringify(toJsonReport(result), null, pretty ? 2 : 0);
+}
+async function writeMarkdownSummary(summaryPath, result) {
+  if (!summaryPath) {
+    return false;
+  }
+  try {
+    await import_node_fs2.promises.appendFile(summaryPath, `${formatMarkdownReport(result)}
+`, "utf8");
+    return true;
+  } catch {
+    return false;
+  }
+}
+function formatTextCheck(check, colors) {
+  const status = getDisplayStatus(check);
+  const colorName = check.status === "pass" ? "green" : check.status === "warning" ? "yellow" : "red";
+  const renderedStatus = check.status === "excluded" ? "SKIP" : color(colorName, status, colors);
+  const points = check.excluded ? "excluded" : `${check.earned}/${check.points}`;
+  return `  [${renderedStatus}] ${check.id} - ${check.label} (${points}) - ${check.detail}`;
+}
+function formatMarkdownCheck(check) {
+  const points = check.excluded ? "excluded" : `${check.earned}/${check.points}`;
+  return [
+    getDisplayStatus(check),
+    `\`${check.id}\``,
+    check.category,
+    escapeMarkdown(check.label),
+    points,
+    escapeMarkdown(check.detail)
+  ].map((value) => String(value).replace(/\|/g, "\\|")).join(" | ").replace(/^/, "| ").replace(/$/, " |");
+}
+function getDisplayStatus(check) {
+  switch (check.status) {
+    case "pass":
+      return "PASS";
+    case "fail":
+      return "MISS";
+    case "warning":
+      return "WARN";
+    case "excluded":
+      return "SKIP";
+  }
+}
+function formatInlineList(values) {
+  if (values.length === 0) {
+    return "_none_";
+  }
+  return values.map((value) => `\`${value}\``).join(", ");
+}
+function formatCustomWeights(weights) {
+  const entries = Object.entries(weights);
+  if (entries.length === 0) {
+    return "_none_";
+  }
+  return entries.map(([id, weight]) => `\`${id}: ${weight}\``).join(", ");
+}
+function escapeMarkdown(value) {
+  return value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 function color(name, value, enabled) {
   if (!enabled) {
@@ -19387,26 +20040,59 @@ function color(name, value, enabled) {
 // src/index.ts
 async function run() {
   try {
-    const minScore = parseMinScore(getInput("min-score"));
+    const config = parseActionConfig({
+      minScore: getInput("min-score"),
+      strictMode: getInput("strict-mode"),
+      failOnMissing: getInput("fail-on-missing"),
+      format: getInput("format"),
+      excludeChecks: getInput("exclude-checks"),
+      readmeLanguage: getInput("readme-language"),
+      customWeights: getInput("custom-weights"),
+      jobSummary: getInput("job-summary")
+    });
     const repositoryPath = process.env.GITHUB_WORKSPACE || process.cwd();
-    const result = await auditRepository(repositoryPath);
-    const passed = result.score >= minScore;
-    info(formatReport(result, minScore, { colors: true }));
+    const result = await auditRepository(repositoryPath, config);
+    const jsonReport = JSON.stringify(toJsonReport(result));
+    info(formatActionLog(result));
     result.warnings.forEach((warning2) => warning(warning2));
     setOutput("score", String(result.score));
-    setOutput("passed", String(passed));
+    setOutput("passed", String(result.passed));
     setOutput("warnings", result.warnings.join("\n"));
-    if (!passed) {
-      setFailed(`RepoPulse score ${result.score} is below min-score ${minScore}.`);
+    setOutput("json", jsonReport);
+    setOutput("report-json", jsonReport);
+    if (config.jobSummary) {
+      const summaryWritten = await writeMarkdownSummary(process.env.GITHUB_STEP_SUMMARY, result);
+      if (!summaryWritten && process.env.GITHUB_STEP_SUMMARY) {
+        warning("RepoPulse could not write the GitHub Step Summary.");
+      }
+    }
+    if (shouldFailWorkflow(result)) {
+      setFailed(`RepoPulse score ${result.score} is below min-score ${config.minScore}.`);
     }
   } catch (error2) {
     setFailed(error2 instanceof Error ? error2.message : String(error2));
   }
 }
-void run();
+function shouldFailWorkflow(result) {
+  return !result.passed && result.config.failOnMissing;
+}
+function formatActionLog(result) {
+  switch (result.config.format) {
+    case "markdown":
+      return formatMarkdownReport(result);
+    case "json":
+      return formatJsonReport(result, true);
+    case "text":
+      return formatTextReport(result, { colors: true });
+  }
+}
+if (require.main === module) {
+  void run();
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  run
+  run,
+  shouldFailWorkflow
 });
 /*! Bundled license information:
 
@@ -19416,4 +20102,3 @@ undici/lib/web/fetch/body.js:
 undici/lib/web/websocket/frame.js:
   (*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> *)
 */
-//# sourceMappingURL=index.js.map

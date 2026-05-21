@@ -19,4 +19,3 @@ RepoPulse is built for maintainers and contributors who want clear, practical co
 ## Enforcement
 
 Maintainers may remove comments, close discussions, or restrict participation when behavior harms the project or its contributors. Serious issues can be reported privately through the security contact listed in SECURITY.md.
-

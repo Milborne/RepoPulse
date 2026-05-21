@@ -18,4 +18,3 @@ body:
       description: Describe the check, scoring change, or report improvement.
     validations:
       required: true
-
