@@ -7,6 +7,34 @@ inputs:
     description: Minimum acceptable health score from 0 to 100.
     required: false
     default: "70"
+  strict-mode:
+    description: Require stricter checks, including real Markdown README headings for section detection.
+    required: false
+    default: "false"
+  fail-on-missing:
+    description: Fail the workflow when the score is below min-score. Reports warnings and outputs either way.
+    required: false
+    default: "true"
+  format:
+    description: Main log output format. Supported values are text, markdown, and json.
+    required: false
+    default: "text"
+  exclude-checks:
+    description: Comma-separated check IDs to exclude, such as funding,code-of-conduct.
+    required: false
+    default: ""
+  readme-language:
+    description: README section language to detect. Supported values are auto, en, and es.
+    required: false
+    default: "auto"
+  custom-weights:
+    description: JSON object that overrides check weights by check ID, such as {"funding":0}.
+    required: false
+    default: ""
+  job-summary:
+    description: Write a Markdown report to the GitHub Actions job summary when available.
+    required: false
+    default: "true"
 
 outputs:
   score:
@@ -15,6 +43,10 @@ outputs:
     description: Whether the repository met the minimum score.
   warnings:
     description: Warning messages found during the audit.
+  json:
+    description: Structured JSON report for downstream workflow steps.
+  report-json:
+    description: Alias for the structured JSON report.
 
 runs:
   using: node24

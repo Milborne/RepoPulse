@@ -1,129 +1,169 @@
 export type CheckCategory = "file" | "readme-section";
 
-export interface AuditCheck {
+export type ExpectedPathType = "file" | "directory" | "file-or-directory";
+
+export interface AuditCheckDefinition {
   id: string;
+  category: CheckCategory;
   label: string;
   points: number;
   recommendation: string;
+  path?: string;
+  expectedType?: ExpectedPathType;
 }
 
-export interface FileAuditCheck extends AuditCheck {
-  path: string;
+export interface ReadmeSectionCheckDefinition extends AuditCheckDefinition {
+  category: "readme-section";
+  headings: {
+    en: string[];
+    es: string[];
+  };
+  loosePatterns?: RegExp[];
 }
 
-export interface ReadmeSectionCheck extends AuditCheck {
-  patterns: RegExp[];
-}
-
-export const FILE_CHECKS: FileAuditCheck[] = [
+export const FILE_CHECKS: AuditCheckDefinition[] = [
   {
     id: "readme",
+    category: "file",
     label: "README.md",
     path: "README.md",
+    expectedType: "file",
     points: 12,
-    recommendation: "Add a README.md that explains the project, setup, usage, contribution flow, license, and funding options."
+    recommendation:
+      "Add a non-empty README.md that explains setup, usage, contribution flow, license, and funding or sponsorship options."
   },
   {
     id: "license",
+    category: "file",
     label: "LICENSE",
     path: "LICENSE",
+    expectedType: "file",
     points: 10,
-    recommendation: "Add a LICENSE file so users know how they can use and distribute the project."
+    recommendation:
+      "Add a non-empty LICENSE file with a recognizable open source license such as MIT, Apache-2.0, GPL, BSD, ISC, or MPL."
   },
   {
     id: "contributing",
+    category: "file",
     label: "CONTRIBUTING.md",
     path: "CONTRIBUTING.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add CONTRIBUTING.md with local setup, test commands, and pull request expectations."
+    recommendation:
+      "Add CONTRIBUTING.md with setup, test/build commands, development flow, and pull request expectations."
   },
   {
     id: "code-of-conduct",
+    category: "file",
     label: "CODE_OF_CONDUCT.md",
     path: "CODE_OF_CONDUCT.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add CODE_OF_CONDUCT.md to set clear community behavior expectations."
+    recommendation:
+      "Add CODE_OF_CONDUCT.md with expected behavior, unacceptable behavior, and enforcement guidance."
   },
   {
     id: "security",
+    category: "file",
     label: "SECURITY.md",
     path: "SECURITY.md",
+    expectedType: "file",
     points: 7,
-    recommendation: "Add SECURITY.md with supported versions and vulnerability reporting instructions."
+    recommendation:
+      "Add SECURITY.md with private vulnerability reporting instructions, such as an email address or GitHub Private Vulnerability Reporting."
   },
   {
     id: "funding",
+    category: "file",
     label: ".github/FUNDING.yml",
     path: ".github/FUNDING.yml",
+    expectedType: "file",
     points: 5,
-    recommendation: "Add .github/FUNDING.yml so contributors can find sponsorship options."
+    recommendation:
+      "Add .github/FUNDING.yml with real sponsorship handles, or exclude the funding check when sponsorship does not apply."
   },
   {
     id: "issue-template",
+    category: "file",
     label: ".github/ISSUE_TEMPLATE",
     path: ".github/ISSUE_TEMPLATE",
+    expectedType: "directory",
     points: 6,
-    recommendation: "Add issue templates to collect consistent bug reports and feature requests."
+    recommendation:
+      "Add at least one useful issue template in .github/ISSUE_TEMPLATE using .yml, .yaml, or .md."
   },
   {
     id: "pull-request-template",
+    category: "file",
     label: ".github/PULL_REQUEST_TEMPLATE.md",
     path: ".github/PULL_REQUEST_TEMPLATE.md",
+    expectedType: "file",
     points: 6,
-    recommendation: "Add a pull request template with checklist items for tests, docs, and risk."
+    recommendation:
+      "Add a pull request template with summary, tests, documentation, checklist, or risk sections."
   }
 ];
 
-export const README_SECTION_CHECKS: ReadmeSectionCheck[] = [
+export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
   {
     id: "readme-installation",
+    category: "readme-section",
     label: "Installation",
     points: 8,
-    patterns: [
-      headingPattern(["installation", "install", "setup", "getting started"]),
-      /(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i
-    ],
-    recommendation: "Add an Installation section that shows how to install or prepare the project."
+    headings: {
+      en: ["installation", "install", "setup", "getting started"],
+      es: ["instalacion", "instalación", "configuracion", "configuración", "primeros pasos"]
+    },
+    loosePatterns: [/\b(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i],
+    recommendation: "Add an Installation section with setup or install commands."
   },
   {
     id: "readme-usage",
+    category: "readme-section",
     label: "Usage",
     points: 8,
-    patterns: [
-      headingPattern(["usage", "use", "quickstart", "examples?", "how to use"])
-    ],
-    recommendation: "Add a Usage section with a realistic example."
+    headings: {
+      en: ["usage", "use", "quickstart", "examples?", "how to use"],
+      es: ["uso", "uso rapido", "uso rápido", "ejemplos?", "como usar", "cómo usar"]
+    },
+    recommendation: "Add a Usage section with a realistic workflow or command example."
   },
   {
     id: "readme-contributing",
+    category: "readme-section",
     label: "Contributing",
     points: 8,
-    patterns: [
-      headingPattern(["contributing", "contribute", "development", "contributors?"])
-    ],
+    headings: {
+      en: ["contributing", "contribute", "development", "contributors?"],
+      es: ["contribuir", "contribucion", "contribución", "desarrollo", "colaboradores?"]
+    },
     recommendation: "Add a Contributing section that links to CONTRIBUTING.md or explains the process."
   },
   {
     id: "readme-license",
+    category: "readme-section",
     label: "License",
     points: 8,
-    patterns: [
-      headingPattern(["license", "licensing"])
-    ],
+    headings: {
+      en: ["license", "licensing"],
+      es: ["licencia", "licenciamiento"]
+    },
     recommendation: "Add a License section that names the project license."
   },
   {
     id: "readme-funding",
+    category: "readme-section",
     label: "Sponsors or Funding",
     points: 8,
-    patterns: [
-      headingPattern(["sponsors?", "funding", "support", "donate", "sponsoring"])
-    ],
-    recommendation: "Add a Sponsors or Funding section that explains how users can support the project."
+    headings: {
+      en: ["sponsors?", "funding", "support", "donate", "sponsoring"],
+      es: ["patrocinadores?", "financiacion", "financiación", "apoyo", "donar", "patrocinar"]
+    },
+    recommendation:
+      "Add a Sponsors or Funding section, or exclude this check when sponsorship does not apply."
   }
 ];
 
-function headingPattern(names: string[]): RegExp {
-  return new RegExp(String.raw`(^|\n)\s{0,3}#{1,6}\s*(?:${names.join("|")})(?:\s|$|[#:` + "`" + String.raw`])`, "i");
-}
+export const ALL_CHECKS: AuditCheckDefinition[] = [...FILE_CHECKS, ...README_SECTION_CHECKS];
 
+export const ALL_CHECK_IDS = ALL_CHECKS.map((check) => check.id);
