@@ -123,8 +123,17 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     label: "Usage",
     points: 8,
     headings: {
-      en: ["usage", "use", "quickstart", "examples?", "how to use"],
-      es: ["uso", "uso rapido", "uso rápido", "ejemplos?", "como usar", "cómo usar"]
+      en: ["usage", "use", "quickstart", "quick start", "examples?", "how to use"],
+      es: [
+        "uso",
+        "uso rapido",
+        "uso rápido",
+        "inicio rapido",
+        "inicio rápido",
+        "ejemplos?",
+        "como usar",
+        "cómo usar"
+      ]
     },
     recommendation: "Add a Usage section with a realistic workflow or command example."
   },
@@ -156,7 +165,7 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     label: "Sponsors or Funding",
     points: 8,
     headings: {
-      en: ["sponsors?", "funding", "support", "donate", "sponsoring"],
+      en: ["sponsors?", "funding", "sponsors or funding", "sponsorship", "support", "donate", "sponsoring"],
       es: ["patrocinadores?", "financiacion", "financiación", "apoyo", "donar", "patrocinar"]
     },
     recommendation:

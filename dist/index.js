@@ -19234,8 +19234,17 @@ var README_SECTION_CHECKS = [
     label: "Usage",
     points: 8,
     headings: {
-      en: ["usage", "use", "quickstart", "examples?", "how to use"],
-      es: ["uso", "uso rapido", "uso r\xE1pido", "ejemplos?", "como usar", "c\xF3mo usar"]
+      en: ["usage", "use", "quickstart", "quick start", "examples?", "how to use"],
+      es: [
+        "uso",
+        "uso rapido",
+        "uso r\xE1pido",
+        "inicio rapido",
+        "inicio r\xE1pido",
+        "ejemplos?",
+        "como usar",
+        "c\xF3mo usar"
+      ]
     },
     recommendation: "Add a Usage section with a realistic workflow or command example."
   },
@@ -19267,7 +19276,7 @@ var README_SECTION_CHECKS = [
     label: "Sponsors or Funding",
     points: 8,
     headings: {
-      en: ["sponsors?", "funding", "support", "donate", "sponsoring"],
+      en: ["sponsors?", "funding", "sponsors or funding", "sponsorship", "support", "donate", "sponsoring"],
       es: ["patrocinadores?", "financiacion", "financiaci\xF3n", "apoyo", "donar", "patrocinar"]
     },
     recommendation: "Add a Sponsors or Funding section, or exclude this check when sponsorship does not apply."
