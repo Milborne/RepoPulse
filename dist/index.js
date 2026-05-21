@@ -19223,7 +19223,7 @@ var README_SECTION_CHECKS = [
     points: 8,
     headings: {
       en: ["installation", "install", "setup", "getting started"],
-      es: ["instalacion", "instalaci\xF3n", "configuracion", "configuraci\xF3n", "primeros pasos"]
+      es: ["instalacion", "guia de instalacion", "configuracion", "primeros pasos"]
     },
     loosePatterns: [/\b(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i],
     recommendation: "Add an Installation section with setup or install commands."
@@ -19234,17 +19234,8 @@ var README_SECTION_CHECKS = [
     label: "Usage",
     points: 8,
     headings: {
-      en: ["usage", "use", "quickstart", "quick start", "examples?", "how to use"],
-      es: [
-        "uso",
-        "uso rapido",
-        "uso r\xE1pido",
-        "inicio rapido",
-        "inicio r\xE1pido",
-        "ejemplos?",
-        "como usar",
-        "c\xF3mo usar"
-      ]
+      en: ["usage", "quickstart", "quick start", "examples", "how to use"],
+      es: ["uso", "uso rapido", "inicio rapido", "ejemplos", "como usar", "guia de uso"]
     },
     recommendation: "Add a Usage section with a realistic workflow or command example."
   },
@@ -19254,8 +19245,8 @@ var README_SECTION_CHECKS = [
     label: "Contributing",
     points: 8,
     headings: {
-      en: ["contributing", "contribute", "development", "contributors?"],
-      es: ["contribuir", "contribucion", "contribuci\xF3n", "desarrollo", "colaboradores?"]
+      en: ["contributing", "contribute", "development", "contributor", "contributors"],
+      es: ["contribuir", "contribucion", "desarrollo", "colaborador", "colaboradores"]
     },
     recommendation: "Add a Contributing section that links to CONTRIBUTING.md or explains the process."
   },
@@ -19276,8 +19267,26 @@ var README_SECTION_CHECKS = [
     label: "Sponsors or Funding",
     points: 8,
     headings: {
-      en: ["sponsors?", "funding", "sponsors or funding", "sponsorship", "support", "donate", "sponsoring"],
-      es: ["patrocinadores?", "financiacion", "financiaci\xF3n", "apoyo", "donar", "patrocinar"]
+      en: [
+        "sponsor",
+        "sponsors",
+        "funding",
+        "sponsors or funding",
+        "sponsorship",
+        "support",
+        "support the project",
+        "donate",
+        "sponsoring"
+      ],
+      es: [
+        "patrocinador",
+        "patrocinadores",
+        "financiacion",
+        "apoyo",
+        "apoyar el proyecto",
+        "donar",
+        "patrocinar"
+      ]
     },
     recommendation: "Add a Sponsors or Funding section, or exclude this check when sponsorship does not apply."
   }
@@ -19384,6 +19393,19 @@ var PLACEHOLDER_PATTERN = /\b(?:tu_usuario_github|your[-_\s]?username|username|e
 var EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 var PRIVATE_REPORTING_PATTERN = /\b(?:private vulnerability reporting|privately|security advisory|github security advisories|report privately)\b/i;
 var MIN_LICENSE_LENGTH = 20;
+var FUNDING_ALLOWED_KEYS = /* @__PURE__ */ new Set([
+  "github",
+  "patreon",
+  "open_collective",
+  "ko_fi",
+  "tidelift",
+  "community_bridge",
+  "liberapay",
+  "issuehunt",
+  "otechie",
+  "lfx_crowdfunding",
+  "custom"
+]);
 async function auditRepository(repositoryPath, config = parseActionConfig({})) {
   const fileResults = await Promise.all(
     FILE_CHECKS.map((check) => evaluateFileCheck(repositoryPath, applyWeight(check, config), config))
@@ -19600,14 +19622,67 @@ async function validateFunding(targetPath) {
     return content;
   }
   const rawContent = content.detail;
-  const meaningfulLines = rawContent.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-  if (meaningfulLines.length === 0 || PLACEHOLDER_PATTERN.test(rawContent)) {
+  const entries = parseFundingEntries(rawContent);
+  const meaningfulEntries = entries.filter((entry) => entry.key || entry.value);
+  if (meaningfulEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml has no sponsorship entries"
+    };
+  }
+  if (hasFundingPlaceholder(rawContent)) {
     return {
       status: "fail",
       detail: "Placeholder detected in FUNDING.yml"
     };
   }
-  return { status: "pass", detail: "Found funding configuration without placeholders" };
+  const supportedEntries = entries.filter((entry) => FUNDING_ALLOWED_KEYS.has(entry.key));
+  if (supportedEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml does not use a supported funding key"
+    };
+  }
+  if (!supportedEntries.some((entry) => entry.hasValue)) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml supported keys have empty values"
+    };
+  }
+  return { status: "pass", detail: "Found funding configuration with supported keys" };
+}
+function parseFundingEntries(content) {
+  const lines = content.split(/\r?\n/).map((line) => line.replace(/\s+#.*$/, "")).map((line) => line.trim());
+  const entries = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+    const match = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+    if (!match) {
+      entries.push({ key: "", value: line, hasValue: Boolean(line) });
+      continue;
+    }
+    const key = match[1];
+    const value = match[2].trim();
+    const nextLine = lines[index + 1] ?? "";
+    const hasListValue = !value && nextLine.startsWith("- ") && nextLine.slice(2).trim().length > 0;
+    entries.push({
+      key,
+      value,
+      hasValue: hasFundingValue(value) || hasListValue
+    });
+  }
+  return entries;
+}
+function hasFundingValue(value) {
+  const normalizedValue = value.replace(/[[\]",']/g, "").trim();
+  return normalizedValue.length > 0;
+}
+function hasFundingPlaceholder(content) {
+  const contentWithoutUrls = content.replace(/https?:\/\/\S+/gi, "");
+  return PLACEHOLDER_PATTERN.test(contentWithoutUrls);
 }
 async function validateIssueTemplates(directoryPath) {
   const entries = await import_node_fs.promises.readdir(directoryPath, { withFileTypes: true });
@@ -19724,8 +19799,11 @@ function hasReadmeHeading(check, headings, readmeLanguage) {
   const languages = readmeLanguage === "auto" ? ["en", "es"] : [readmeLanguage];
   const expectedHeadings = languages.flatMap((language) => check.headings[language]).map(normalizeHeading);
   return headings.some(
-    (heading) => expectedHeadings.some((expectedHeading) => new RegExp(`^${expectedHeading}$`).test(heading))
+    (heading) => expectedHeadings.some((expectedHeading) => isHeadingMatch(heading, expectedHeading))
   );
+}
+function isHeadingMatch(heading, expectedHeading) {
+  return heading === expectedHeading || heading.startsWith(`${expectedHeading} `);
 }
 function stripFencedCodeBlocks(content) {
   const lines = content.split(/\r?\n/);

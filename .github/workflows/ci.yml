@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -38,6 +38,13 @@ jobs:
 
       - name: Build action
         run: npm run build
+
+      - name: Run local action
+        uses: ./
+        with:
+          min-score: 70
+          fail-on-missing: false
+          format: json
 
       - name: Verify committed bundle
         run: git diff --exit-code dist/index.js

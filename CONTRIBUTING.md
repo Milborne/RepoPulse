@@ -12,7 +12,7 @@ npm test
 npm run build
 ```
 
-Use `npm run check` before opening a pull request. It runs linting, formatting checks, tests, and the build.
+Use `npm run check` before opening a pull request. It runs linting, formatting checks, tests, and the build. CI runs on Node 24, matching the action runtime declared in `action.yml`.
 
 ## Project Structure
 
@@ -60,4 +60,4 @@ Dependabot updates should pass CI before merging. For runtime dependency updates
 8. Move the major tag, such as `v1`, to the new release.
 9. Publish the GitHub release.
 
-GitHub Marketplace may reject releases from a repository that contains workflow files. If that happens, publish from a release branch or mirror that omits `.github/workflows` while preserving `action.yml` and `dist/index.js`.
+GitHub Marketplace requires the action repository used for publication to not contain workflow files. This repository keeps CI in `.github/workflows` for maintainability. Publish Marketplace releases from a release branch or mirror that omits `.github/workflows` while preserving `action.yml`, `dist/index.js`, docs, and required project files.

@@ -42,11 +42,11 @@ RepoPulse validates more than path existence:
 - `CONTRIBUTING.md`: setup, tests, build, PR, or development flow guidance.
 - `CODE_OF_CONDUCT.md`: expected or unacceptable behavior plus enforcement guidance.
 - `SECURITY.md`: private reporting instructions through email or GitHub Private Vulnerability Reporting.
-- `.github/FUNDING.yml`: real sponsorship configuration without placeholders.
+- `.github/FUNDING.yml`: real sponsorship configuration without placeholders, using supported GitHub funding keys such as `github`, `patreon`, `open_collective`, `ko_fi`, `liberapay`, or `custom`.
 - `.github/ISSUE_TEMPLATE`: directory with useful `.yml`, `.yaml`, or `.md` templates.
 - `.github/PULL_REQUEST_TEMPLATE.md`: checklist or sections for summary, tests, docs, or risk.
 
-README section checks support English and Spanish headings, ignore headings inside fenced code blocks, and can run in strict mode.
+README section checks support English and Spanish headings, ignore headings inside fenced code blocks, and can run in strict mode. Heading detection allows practical prefixes such as `Installation guide`, `Usage examples`, `Guia de instalacion`, and `Como usar RepoPulse`.
 
 ## Inputs
 
@@ -124,6 +124,15 @@ RepoPulse keeps a 0 to 100 scale. The default weights are:
 
 Excluded checks are removed from both earned points and maximum points, so exclusions do not unfairly lower the score. Custom weights also recalculate the maximum dynamically.
 
+Check status semantics:
+
+- `PASS`: the check passed and earns its points.
+- `MISS`: the check failed and earns no points.
+- `WARN`: the check needs maintainer review but keeps its points. This is used for non-blocking signals, such as an unknown custom license.
+- `SKIP`: the check was excluded and is removed from the maximum possible score.
+
+A repository can therefore have a score of 100 with warnings when all warnings are non-blocking review items.
+
 Available check IDs:
 
 ```text
@@ -181,7 +190,7 @@ The build command type-checks the TypeScript source and bundles the action into 
 7. Move the major tag, for example `v1`, to the latest compatible release.
 8. Publish a GitHub release from the immutable tag.
 
-Marketplace note: GitHub Marketplace validation can reject action repositories that contain workflow files. This repository keeps CI for maintainability. If Marketplace publishing blocks a release, create the Marketplace release from a release branch or mirror that omits `.github/workflows`.
+Marketplace note: GitHub Marketplace requires the action repository used for publication to not contain workflow files. This repository keeps CI in `.github/workflows` for maintainability. To publish in Marketplace, create the Marketplace release from a release branch or mirror that omits `.github/workflows` while preserving `action.yml`, `dist/index.js`, docs, and required project files.
 
 ## Troubleshooting
 

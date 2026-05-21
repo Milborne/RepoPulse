@@ -112,7 +112,7 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     points: 8,
     headings: {
       en: ["installation", "install", "setup", "getting started"],
-      es: ["instalacion", "instalación", "configuracion", "configuración", "primeros pasos"]
+      es: ["instalacion", "guia de instalacion", "configuracion", "primeros pasos"]
     },
     loosePatterns: [/\b(?:npm|pnpm|yarn)\s+(?:install|add|ci)\b/i],
     recommendation: "Add an Installation section with setup or install commands."
@@ -123,17 +123,8 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     label: "Usage",
     points: 8,
     headings: {
-      en: ["usage", "use", "quickstart", "quick start", "examples?", "how to use"],
-      es: [
-        "uso",
-        "uso rapido",
-        "uso rápido",
-        "inicio rapido",
-        "inicio rápido",
-        "ejemplos?",
-        "como usar",
-        "cómo usar"
-      ]
+      en: ["usage", "quickstart", "quick start", "examples", "how to use"],
+      es: ["uso", "uso rapido", "inicio rapido", "ejemplos", "como usar", "guia de uso"]
     },
     recommendation: "Add a Usage section with a realistic workflow or command example."
   },
@@ -143,8 +134,8 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     label: "Contributing",
     points: 8,
     headings: {
-      en: ["contributing", "contribute", "development", "contributors?"],
-      es: ["contribuir", "contribucion", "contribución", "desarrollo", "colaboradores?"]
+      en: ["contributing", "contribute", "development", "contributor", "contributors"],
+      es: ["contribuir", "contribucion", "desarrollo", "colaborador", "colaboradores"]
     },
     recommendation: "Add a Contributing section that links to CONTRIBUTING.md or explains the process."
   },
@@ -165,8 +156,26 @@ export const README_SECTION_CHECKS: ReadmeSectionCheckDefinition[] = [
     label: "Sponsors or Funding",
     points: 8,
     headings: {
-      en: ["sponsors?", "funding", "sponsors or funding", "sponsorship", "support", "donate", "sponsoring"],
-      es: ["patrocinadores?", "financiacion", "financiación", "apoyo", "donar", "patrocinar"]
+      en: [
+        "sponsor",
+        "sponsors",
+        "funding",
+        "sponsors or funding",
+        "sponsorship",
+        "support",
+        "support the project",
+        "donate",
+        "sponsoring"
+      ],
+      es: [
+        "patrocinador",
+        "patrocinadores",
+        "financiacion",
+        "apoyo",
+        "apoyar el proyecto",
+        "donar",
+        "patrocinar"
+      ]
     },
     recommendation:
       "Add a Sponsors or Funding section, or exclude this check when sponsorship does not apply."

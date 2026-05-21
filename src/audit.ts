@@ -62,6 +62,19 @@ const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PRIVATE_REPORTING_PATTERN =
   /\b(?:private vulnerability reporting|privately|security advisory|github security advisories|report privately)\b/i;
 const MIN_LICENSE_LENGTH = 20;
+const FUNDING_ALLOWED_KEYS = new Set([
+  "github",
+  "patreon",
+  "open_collective",
+  "ko_fi",
+  "tidelift",
+  "community_bridge",
+  "liberapay",
+  "issuehunt",
+  "otechie",
+  "lfx_crowdfunding",
+  "custom"
+]);
 
 export async function auditRepository(
   repositoryPath: string,
@@ -343,19 +356,84 @@ async function validateFunding(targetPath: string): Promise<ValidationResult> {
   }
 
   const rawContent = content.detail;
-  const meaningfulLines = rawContent
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#"));
+  const entries = parseFundingEntries(rawContent);
+  const meaningfulEntries = entries.filter((entry) => entry.key || entry.value);
 
-  if (meaningfulLines.length === 0 || PLACEHOLDER_PATTERN.test(rawContent)) {
+  if (meaningfulEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml has no sponsorship entries"
+    };
+  }
+
+  if (hasFundingPlaceholder(rawContent)) {
     return {
       status: "fail",
       detail: "Placeholder detected in FUNDING.yml"
     };
   }
 
-  return { status: "pass", detail: "Found funding configuration without placeholders" };
+  const supportedEntries = entries.filter((entry) => FUNDING_ALLOWED_KEYS.has(entry.key));
+
+  if (supportedEntries.length === 0) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml does not use a supported funding key"
+    };
+  }
+
+  if (!supportedEntries.some((entry) => entry.hasValue)) {
+    return {
+      status: "fail",
+      detail: "FUNDING.yml supported keys have empty values"
+    };
+  }
+
+  return { status: "pass", detail: "Found funding configuration with supported keys" };
+}
+
+function parseFundingEntries(content: string): Array<{ key: string; value: string; hasValue: boolean }> {
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+#.*$/, ""))
+    .map((line) => line.trim());
+  const entries: Array<{ key: string; value: string; hasValue: boolean }> = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const match = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+    if (!match) {
+      entries.push({ key: "", value: line, hasValue: Boolean(line) });
+      continue;
+    }
+
+    const key = match[1];
+    const value = match[2].trim();
+    const nextLine = lines[index + 1] ?? "";
+    const hasListValue = !value && nextLine.startsWith("- ") && nextLine.slice(2).trim().length > 0;
+
+    entries.push({
+      key,
+      value,
+      hasValue: hasFundingValue(value) || hasListValue
+    });
+  }
+
+  return entries;
+}
+
+function hasFundingValue(value: string): boolean {
+  const normalizedValue = value.replace(/[[\]",']/g, "").trim();
+  return normalizedValue.length > 0;
+}
+
+function hasFundingPlaceholder(content: string): boolean {
+  const contentWithoutUrls = content.replace(/https?:\/\/\S+/gi, "");
+  return PLACEHOLDER_PATTERN.test(contentWithoutUrls);
 }
 
 async function validateIssueTemplates(directoryPath: string): Promise<ValidationResult> {
@@ -526,8 +604,12 @@ function hasReadmeHeading(
   const expectedHeadings = languages.flatMap((language) => check.headings[language]).map(normalizeHeading);
 
   return headings.some((heading) =>
-    expectedHeadings.some((expectedHeading) => new RegExp(`^${expectedHeading}$`).test(heading))
+    expectedHeadings.some((expectedHeading) => isHeadingMatch(heading, expectedHeading))
   );
+}
+
+function isHeadingMatch(heading: string, expectedHeading: string): boolean {
+  return heading === expectedHeading || heading.startsWith(`${expectedHeading} `);
 }
 
 function stripFencedCodeBlocks(content: string): string {

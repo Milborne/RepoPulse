@@ -8,7 +8,9 @@ RepoPulse supports the latest published major version, currently `v1`.
 
 Please do not open public issues for security vulnerabilities.
 
-Use GitHub Private Vulnerability Reporting for this repository when it is enabled. If it is not enabled, contact the maintainer through a private GitHub security advisory workflow or request that private vulnerability reporting be enabled before sharing sensitive details.
+The recommended reporting channel is GitHub Private Vulnerability Reporting for this repository. Do not share sensitive details until that private channel is available.
+
+If GitHub Private Vulnerability Reporting is not enabled yet, ask the maintainer to enable it before sending exploit details, proof-of-concept code, private logs, or information about affected users. Maintainers should enable GitHub Private Vulnerability Reporting before publishing a stable Marketplace release.
 
 Include:
 

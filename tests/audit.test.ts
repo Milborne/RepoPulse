@@ -105,6 +105,52 @@ describe("auditRepository", () => {
     expect(funding?.detail).toBe("Placeholder detected in FUNDING.yml");
   });
 
+  it("rejects funding files without supported non-empty keys", async () => {
+    const unknownKeyRepository = await createHealthyRepository({
+      files: {
+        ".github/FUNDING.yml": "unknown_platform: Milborne"
+      }
+    });
+    const emptyKnownKeyRepository = await createHealthyRepository({
+      files: {
+        ".github/FUNDING.yml": "github: []"
+      }
+    });
+    const commentsOnlyRepository = await createHealthyRepository({
+      files: {
+        ".github/FUNDING.yml": "# funding goes here"
+      }
+    });
+
+    const unknownKey = await auditRepository(unknownKeyRepository);
+    const emptyKnownKey = await auditRepository(emptyKnownKeyRepository);
+    const commentsOnly = await auditRepository(commentsOnlyRepository);
+
+    expect(unknownKey.checks.find((check) => check.id === "funding")?.detail).toBe(
+      "FUNDING.yml does not use a supported funding key"
+    );
+    expect(emptyKnownKey.checks.find((check) => check.id === "funding")?.detail).toBe(
+      "FUNDING.yml supported keys have empty values"
+    );
+    expect(commentsOnly.checks.find((check) => check.id === "funding")?.detail).toBe(
+      "FUNDING.yml has no sponsorship entries"
+    );
+  });
+
+  it("accepts supported funding keys with populated values", async () => {
+    const repositoryPath = await createHealthyRepository({
+      files: {
+        ".github/FUNDING.yml": 'custom: ["https://example.com/support"]'
+      }
+    });
+
+    const result = await auditRepository(repositoryPath);
+    const funding = result.checks.find((check) => check.id === "funding");
+
+    expect(funding?.passed).toBe(true);
+    expect(funding?.detail).toBe("Found funding configuration with supported keys");
+  });
+
   it("rejects SECURITY.md without a private reporting channel", async () => {
     const repositoryPath = await createHealthyRepository({
       files: {
@@ -169,6 +215,58 @@ describe("auditRepository", () => {
     });
 
     const result = await auditRepository(repositoryPath, parseActionConfig({ readmeLanguage: "es" }));
+
+    expect(result.readmeSections.every((check) => check.passed)).toBe(true);
+  });
+
+  it("matches natural English README heading prefixes", async () => {
+    const repositoryPath = await createHealthyRepository({
+      files: {
+        "README.md": [
+          "# Project",
+          "",
+          "## Installation guide",
+          "npm install",
+          "",
+          "## Usage examples",
+          "Use this action in a workflow.",
+          "",
+          "## Contributing",
+          "## License",
+          "## Sponsors or Funding"
+        ].join("\n")
+      }
+    });
+
+    const result = await auditRepository(repositoryPath, parseActionConfig({ strictMode: "true" }));
+
+    expect(result.readmeSections.find((check) => check.id === "readme-installation")?.passed).toBe(true);
+    expect(result.readmeSections.find((check) => check.id === "readme-usage")?.passed).toBe(true);
+  });
+
+  it("matches natural Spanish README heading prefixes", async () => {
+    const repositoryPath = await createHealthyRepository({
+      files: {
+        "README.md": [
+          "# Proyecto",
+          "",
+          "## Guía de instalación",
+          "npm install",
+          "",
+          "## Cómo usar RepoPulse",
+          "Usa esta acción en un workflow.",
+          "",
+          "## Contribuir",
+          "## Licencia",
+          "## Apoyar el proyecto"
+        ].join("\n")
+      }
+    });
+
+    const result = await auditRepository(
+      repositoryPath,
+      parseActionConfig({ readmeLanguage: "es", strictMode: "true" })
+    );
 
     expect(result.readmeSections.every((check) => check.passed)).toBe(true);
   });
